@@ -1,0 +1,13 @@
+.idea/
+__pycache__/
+*.py[cod]
+*$py.class
+
+venv/
+.venv/
+env/
+
+.DS_Store
+
+.pytest_cache/
+.coverage
