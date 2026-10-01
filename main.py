@@ -225,9 +225,6 @@ class ColorApp:
 
     @staticmethod
     def _set_scale_quietly(scale: tk.Scale, value: float) -> None:
-        """Programmatic Scale.set() with a fine resolution walks every tick and
-        fires `command` on each one. Clearing command makes the jump instant.
-        """
         cmd = scale.cget("command")
         scale.configure(command="")
         try:
