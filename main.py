@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 from __future__ import annotations
 
 import tkinter as tk
@@ -18,6 +16,8 @@ class ColorApp:
 
         self._updating = False
         self._active_source: Optional[str] = None
+        self._slider_after_id: Optional[str] = None
+        self._pending_slider_source: Optional[str] = None
 
         self._r = 128
         self._g = 128
@@ -84,22 +84,22 @@ class ColorApp:
         self._h, self._s, self._v = self.rgb_to_hsv(r, g, b)
         return clipped
 
-    def update_from_rgb(self) -> None:
+    def update_from_rgb(self, skip_scales: Optional[str] = None) -> None:
         self._sync_from_rgb()
-        self._refresh_ui_from_state()
+        self._refresh_ui_from_state(skip_scales=skip_scales)
         self._set_status_ok()
 
-    def update_from_hsv(self, report_clip: bool = False) -> None:
+    def update_from_hsv(self, report_clip: bool = False, skip_scales: Optional[str] = None) -> None:
         clipped = self._sync_from_hsv()
-        self._refresh_ui_from_state()
+        self._refresh_ui_from_state(skip_scales=skip_scales)
         if report_clip or clipped:
             self._set_status_clip()
         else:
             self._set_status_ok()
 
-    def update_from_lab(self, report_clip: bool = False) -> None:
+    def update_from_lab(self, report_clip: bool = False, skip_scales: Optional[str] = None) -> None:
         clipped = self._sync_from_lab()
-        self._refresh_ui_from_state()
+        self._refresh_ui_from_state(skip_scales=skip_scales)
         if report_clip or clipped:
             self._set_status_clip()
         else:
@@ -223,35 +223,67 @@ class ColorApp:
             scale.pack(side=tk.LEFT, fill=tk.X, expand=True)
             scales[name] = scale
 
-    def _refresh_ui_from_state(self) -> None:
+    @staticmethod
+    def _set_scale_quietly(scale: tk.Scale, value: float) -> None:
+        """Programmatic Scale.set() with a fine resolution walks every tick and
+        fires `command` on each one. Clearing command makes the jump instant.
+        """
+        cmd = scale.cget("command")
+        scale.configure(command="")
+        try:
+            scale.set(value)
+        finally:
+            scale.configure(command=cmd)
+
+    def _refresh_ui_from_state(self, skip_scales: Optional[str] = None) -> None:
         self._updating = True
         try:
             self._rgb_entries["R"].set(str(self._r))
             self._rgb_entries["G"].set(str(self._g))
             self._rgb_entries["B"].set(str(self._b))
-            self._rgb_scales["R"].set(self._r)
-            self._rgb_scales["G"].set(self._g)
-            self._rgb_scales["B"].set(self._b)
+            if skip_scales != "rgb":
+                self._set_scale_quietly(self._rgb_scales["R"], self._r)
+                self._set_scale_quietly(self._rgb_scales["G"], self._g)
+                self._set_scale_quietly(self._rgb_scales["B"], self._b)
 
             self._hsv_entries["H"].set(f"{self._h:.2f}")
             self._hsv_entries["S"].set(f"{self._s:.2f}")
             self._hsv_entries["V"].set(f"{self._v:.2f}")
-            self._hsv_scales["H"].set(self._h)
-            self._hsv_scales["S"].set(self._s)
-            self._hsv_scales["V"].set(self._v)
+            if skip_scales != "hsv":
+                self._set_scale_quietly(self._hsv_scales["H"], self._h)
+                self._set_scale_quietly(self._hsv_scales["S"], self._s)
+                self._set_scale_quietly(self._hsv_scales["V"], self._v)
 
             self._lab_entries["L"].set(f"{self._L:.2f}")
             self._lab_entries["a"].set(f"{self._a:.2f}")
             self._lab_entries["b"].set(f"{self._b_lab:.2f}")
-            self._lab_scales["L"].set(self._L)
-            self._lab_scales["a"].set(self._a)
-            self._lab_scales["b"].set(self._b_lab)
+            if skip_scales != "lab":
+                self._set_scale_quietly(self._lab_scales["L"], self._L)
+                self._set_scale_quietly(self._lab_scales["a"], self._a)
+                self._set_scale_quietly(self._lab_scales["b"], self._b_lab)
 
             hex_val = cc.rgb_to_hex(self._r, self._g, self._b)
             self.hex_var.set(f"HEX: {hex_val}")
             self.preview.configure(bg=hex_val)
         finally:
             self._updating = False
+
+    def _schedule_slider_update(self, source: str) -> None:
+        self._pending_slider_source = source
+        if self._slider_after_id is not None:
+            return
+        self._slider_after_id = self.root.after_idle(self._flush_slider_update)
+
+    def _flush_slider_update(self) -> None:
+        self._slider_after_id = None
+        source = self._pending_slider_source
+        self._pending_slider_source = None
+        if source == "rgb":
+            self.update_from_rgb(skip_scales="rgb")
+        elif source == "hsv":
+            self.update_from_hsv(report_clip=False, skip_scales="hsv")
+        elif source == "lab":
+            self.update_from_lab(report_clip=False, skip_scales="lab")
 
     def update_ui(self) -> None:
         self._refresh_ui_from_state()
@@ -267,7 +299,7 @@ class ColorApp:
             self._g = iv
         else:
             self._b = iv
-        self.update_from_rgb()
+        self._schedule_slider_update("rgb")
 
     def _commit_rgb_entry(self, _name: str) -> None:
         if self._updating:
@@ -300,7 +332,7 @@ class ColorApp:
             self._s = value
         else:
             self._v = value
-        self.update_from_hsv(report_clip=False)
+        self._schedule_slider_update("hsv")
 
     def _commit_hsv_entry(self, _name: str) -> None:
         if self._updating:
@@ -333,7 +365,7 @@ class ColorApp:
             self._a = value
         else:
             self._b_lab = value
-        self.update_from_lab(report_clip=False)
+        self._schedule_slider_update("lab")
 
     def _commit_lab_entry(self, _name: str) -> None:
         if self._updating:

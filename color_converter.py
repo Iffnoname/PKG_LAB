@@ -161,7 +161,7 @@ def lab_to_xyz(L: float, a: float, b: float) -> Tuple[float, float, float]:
     yr = _f_inv_lab(fy)
     zr = _f_inv_lab(fz)
 
-    x = xr * D65_XN
+    x = xr *  D65_XN
     y = yr * D65_YN
     z = zr * D65_ZN
     return x, y, z

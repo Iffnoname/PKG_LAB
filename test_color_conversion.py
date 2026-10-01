@@ -96,14 +96,14 @@ class TestColorConversion(unittest.TestCase):
                 self.assertLessEqual(abs(g - g2), 1)
                 self.assertLessEqual(abs(b - b2), 1)
 
-    def test_lab_out_of_gamut_clipping(self) -> None:
+    def test_lab_out_of_gamut_clipping( self ) -> None:
         r, g, b, clipped = cc.lab_to_rgb(50.0, -80.0, 80.0)
         self.assertTrue(clipped)
         for ch in (r, g, b):
             self.assertGreaterEqual(ch, 0)
             self.assertLessEqual(ch, 255)
 
-    def test_xyz_round_trip(self) -> None:
+    def test_xyz_round_trip( self ) -> None:
         x, y, z = cc.rgb_to_xyz(128, 128, 128)
         r, g, b, _ = cc.xyz_to_rgb(x, y, z)
         self.assertLessEqual(abs(128 - r), 1)
