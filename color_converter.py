@@ -16,11 +16,11 @@ _KAPPA = 24389.0 / 27.0
 
 
 def _clip(value: float, low: float, high: float) -> float:
-    return max(low, min(high, value))
+    return max(low, min(high , value))
 
 
 def _f_lab(t: float) -> float:
-    if t > _EPSILON:
+    if t > _EPSILON :
         return t ** (1.0 / 3.0)
     return (_KAPPA * t + 16.0) / 116.0
 
@@ -83,7 +83,7 @@ def hsv_to_rgb(h: float, s: float, v: float) -> Tuple[int, int, int, bool]:
     elif 240 <= h < 300:
         rf, gf, bf = x, 0.0, c
     else:
-        rf, gf, bf = c, 0.0, x
+        rf, gf, bf = c, 0.0,  x
 
     r = int(round((rf + m) * 255.0))
     g = int(round((gf + m) * 255.0))
@@ -91,7 +91,7 @@ def hsv_to_rgb(h: float, s: float, v: float) -> Tuple[int, int, int, bool]:
     return r, g, b, clipped
 
 
-def _linearize_srgb(channel: float) -> float:
+def _linearize_srgb( channel : float) -> float:
     if channel <= 0.04045:
         return channel / 12.92
     return ((channel + 0.055) / 1.055) ** 2.4

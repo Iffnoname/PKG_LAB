@@ -77,9 +77,9 @@ class TestColorConversion(unittest.TestCase):
         for r, g, b in self.EXTRA_COLORS:
             with self.subTest(rgb=(r, g, b)):
                 r2, g2, b2 = _round_trip_rgb_hsv(r, g, b)
-                self.assertLessEqual(abs(r - r2), 1)
-                self.assertLessEqual(abs(g - g2), 1)
-                self.assertLessEqual(abs(b - b2), 1)
+                self.assertLessEqual(abs(r - r2), 1 )
+                self.assertLessEqual(abs(g - g2), 1 )
+                self.assertLessEqual(abs(b - b2), 1 )
 
     def test_round_trip_rgb_lab(self) -> None:
         for r, g, b, _ in self.BASIC_COLORS:

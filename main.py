@@ -405,7 +405,7 @@ class ColorApp:
     def _parse_float_field(text: str, label: str, lo: float, hi: float) -> float:
         text = text.strip().replace(",", ".")
         if not text:
-            raise ValueError(f"Введите числовое значение для {label}.")
+            raise ValueError(f"Ввeдите числовое значение для {label}.")
         try:
             val = float(text)
         except ValueError:
