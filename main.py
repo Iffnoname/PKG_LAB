@@ -392,7 +392,7 @@ class ColorApp:
     def _parse_int_field(text: str, label: str, lo: int, hi: int) -> int:
         text = text.strip()
         if not text:
-            raise ValueError(f"Введите числовое значение для {label}.")
+            raise ValueError(f"Ввeдите числовое значение для {label}.")
         try:
             val = int(text)
         except ValueError:
